@@ -1,13 +1,18 @@
 use bevy::{
-    app::Events,
+    app::{App, Events, Plugin},
+    asset::AssetServer,
     core::Time,
     ecs::{
         component::Component,
-        system::{Commands, Query, Res},
+        query::With,
+        system::{Commands, Query, Res, ResMut},
     },
-    math::{Vec2, Vec3},
+    input::{mouse::MouseButton, Input},
+    math::{Rect, Vec2, Vec3},
     render::color::Color,
+    text::{Text, TextSection, TextStyle},
     transform::components::Transform,
+    ui::{entity::TextBundle, PositionType, Style, Val},
     window::{WindowResized, Windows},
 };
 use bevy_prototype_lyon::{
@@ -19,14 +24,97 @@ use bevy_prototype_lyon::{
 };
 use rand::{thread_rng, Rng};
 
+pub struct RectanglesPlugin;
+
+impl Plugin for RectanglesPlugin {
+    fn build(&self, app: &mut App) {
+        app.insert_resource(Stats::default())
+            .add_startup_system(setup)
+            .add_system(bounds_updater)
+            .add_system(movement)
+            .add_system(collision_detection)
+            .add_system(mouse_handler)
+            .add_system(stats_system);
+    }
+}
+
+struct Stats {
+    count: u32,
+}
+
+impl Default for Stats {
+    fn default() -> Self {
+        Stats { count: 250 }
+    }
+}
+
 #[derive(Component)]
-pub struct RectangleObject {
+struct StatsText;
+
+#[derive(Component)]
+struct RectangleObject {
     velocity: f32,
     width: f32,
     teleport_target: f32,
 }
 
-pub fn setup(mut commands: Commands, windows: Res<Windows>) {
+fn setup(
+    mut commands: Commands,
+    windows: Res<Windows>,
+    stats: Res<Stats>,
+    asset_server: Res<AssetServer>,
+) {
+    spawn_rectangles(&mut commands, &windows, stats.count);
+
+    commands
+        .spawn_bundle(TextBundle {
+            text: Text {
+                sections: vec![
+                    TextSection {
+                        value: "Rectangle count: ".to_string(),
+                        style: TextStyle {
+                            font: asset_server.load("fonts/FiraSans-Bold.ttf"),
+                            font_size: 40.0,
+                            color: Color::BLACK,
+                        },
+                    },
+                    TextSection {
+                        value: "".to_string(),
+                        style: TextStyle {
+                            font: asset_server.load("fonts/FiraSans-Bold.ttf"),
+                            font_size: 40.0,
+                            color: Color::BLACK,
+                        },
+                    },
+                ],
+                ..Default::default()
+            },
+            style: Style {
+                position_type: PositionType::Absolute,
+                position: Rect {
+                    top: Val::Px(0.),
+                    ..Default::default()
+                },
+                ..Default::default()
+            },
+            ..Default::default()
+        })
+        .insert(StatsText);
+}
+
+fn mouse_handler(
+    mut commands: Commands,
+    mouse_button_input: Res<Input<MouseButton>>,
+    windows: Res<Windows>,
+    mut stats: ResMut<Stats>,
+) {
+    if mouse_button_input.just_released(MouseButton::Left) {
+        spawn_rectangles(&mut commands, &windows, stats.count);
+        stats.count *= 2;
+    }
+}
+
+fn spawn_rectangles(commands: &mut Commands, windows: &Windows, num: u32) {
     let mut rng = thread_rng();
     let window = windows.get_primary().unwrap();
     let (width, height) = (window.width(), window.height());
@@ -44,7 +132,7 @@ pub fn setup(mut commands: Commands, windows: Res<Windows>) {
         outline_mode: StrokeMode::new(Color::BLACK, 1.5),
     };
 
-    for _ in 0..1000 {
+    for _ in 0..num {
         let dimensions = Vec2::splat(10. + rng.gen::<f32>() * 40.);
         commands
             .spawn_bundle(GeometryBuilder::build_as(
@@ -67,7 +155,7 @@ pub fn setup(mut commands: Commands, windows: Res<Windows>) {
     }
 }
 
-pub fn bounds_updater(
+fn bounds_updater(
     resize_event: Res<Events<WindowResized>>,
     mut rectangles_query: Query<&mut RectangleObject>,
 ) {
@@ -85,16 +173,22 @@ pub fn bounds_updater(
     }
 }
 
-pub fn movement(time: Res<Time>, mut rectangles_query: Query<(&RectangleObject, &mut Transform)>) {
+fn movement(time: Res<Time>, mut rectangles_query: Query<(&RectangleObject, &mut Transform)>) {
     for (r, mut transform) in rectangles_query.iter_mut() {
         transform.translation.x -= r.velocity * time.delta_seconds();
     }
 }
 
-pub fn collision_detection(mut rectangles_query: Query<(&RectangleObject, &mut Transform)>) {
+fn collision_detection(mut rectangles_query: Query<(&RectangleObject, &mut Transform)>) {
     for (r, mut transform) in rectangles_query.iter_mut() {
         if transform.translation.x < r.teleport_target {
             transform.translation.x = -transform.translation.x;
         }
+    }
+}
+
+fn stats_system(stats: Res<Stats>, mut query: Query<&mut Text, With<StatsText>>) {
+    for mut text in query.iter_mut() {
+        text.sections[1].value = format!("{}", stats.count);
     }
 }

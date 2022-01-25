@@ -8,6 +8,7 @@ use bevy::{
     DefaultPlugins,
 };
 use bevy_prototype_lyon::plugin::ShapePlugin;
+use bevy_screen_diags::ScreenDiagsPlugin;
 
 mod rectangles;
 
@@ -21,20 +22,18 @@ fn main() {
         ..Default::default()
     })
     .insert_resource(ClearColor(Color::WHITE))
-    .add_plugins(DefaultPlugins);
+    .add_plugins(DefaultPlugins)
+    .add_plugin(ScreenDiagsPlugin)
+    .add_plugin(ShapePlugin)
+    .add_plugin(rectangles::RectanglesPlugin)
+    .add_startup_system(setup_system);
 
     if cfg!(debug_assertions) {
         app.add_plugin(FrameTimeDiagnosticsPlugin::default())
             .add_plugin(LogDiagnosticsPlugin::default());
     }
 
-    app.add_plugin(ShapePlugin)
-        .add_startup_system(setup_system)
-        .add_startup_system(rectangles::setup)
-        .add_system(rectangles::bounds_updater)
-        .add_system(rectangles::movement)
-        .add_system(rectangles::collision_detection)
-        .run();
+    app.run();
 }
 
 fn setup_system(mut commands: Commands) {

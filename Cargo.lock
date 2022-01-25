@@ -590,6 +590,13 @@ dependencies = [
 ]
 
 [[package]]
+name = "bevy_screen_diags"
+version = "0.2.0"
+dependencies = [
+ "bevy",
+]
+
+[[package]]
 name = "bevy_sprite"
 version = "0.6.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -715,6 +722,7 @@ version = "0.1.0"
 dependencies = [
  "bevy",
  "bevy_prototype_lyon",
+ "bevy_screen_diags",
  "rand",
 ]
 
