@@ -12,7 +12,14 @@ use bevy_screen_diags::ScreenDiagsPlugin;
 
 mod rectangles;
 
+#[cfg(target_arch = "wasm32")]
+#[global_allocator]
+static ALLOC: wee_alloc::WeeAlloc = wee_alloc::WeeAlloc::INIT;
+
 fn main() {
+    #[cfg(target_arch = "wasm32")]
+    console_error_panic_hook::set_once();
+
     let mut app = App::new();
 
     app.insert_resource(WindowDescriptor {
