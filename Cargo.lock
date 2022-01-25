@@ -526,6 +526,7 @@ dependencies = [
 [[package]]
 name = "bevy_screen_diags"
 version = "0.2.0"
+source = "git+https://github.com/SUPERCILEX/bevy_screen_diags#c9d6f48087b1f44feaad62b8c1861ce209842c43"
 dependencies = [
  "bevy",
 ]

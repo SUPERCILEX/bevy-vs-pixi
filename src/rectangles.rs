@@ -1,3 +1,5 @@
+use std::fmt::Write;
+
 use bevy::{
     app::{App, Events, Plugin},
     asset::AssetServer,
@@ -167,28 +169,32 @@ fn bounds_updater(
 
     if let Some(e) = target_event {
         let teleport_target = -(e.width / 2.);
-        for mut r in rectangles_query.iter_mut() {
+        rectangles_query.for_each_mut(|mut r| {
             r.teleport_target = teleport_target - r.width;
-        }
+        });
     }
 }
 
 fn movement(time: Res<Time>, mut rectangles_query: Query<(&RectangleObject, &mut Transform)>) {
-    for (r, mut transform) in rectangles_query.iter_mut() {
+    rectangles_query.for_each_mut(|(r, mut transform)| {
         transform.translation.x -= r.velocity * time.delta_seconds();
-    }
+    });
 }
 
 fn collision_detection(mut rectangles_query: Query<(&RectangleObject, &mut Transform)>) {
-    for (r, mut transform) in rectangles_query.iter_mut() {
+    rectangles_query.for_each_mut(|(r, mut transform)| {
         if transform.translation.x < r.teleport_target {
             transform.translation.x = -transform.translation.x;
         }
-    }
+    });
 }
 
 fn stats_system(stats: Res<Stats>, mut query: Query<&mut Text, With<StatsText>>) {
-    for mut text in query.iter_mut() {
-        text.sections[1].value = format!("{}", stats.count);
+    if !stats.is_changed() {
+        return;
     }
+
+    let mut text = query.single_mut();
+    text.sections[1].value.clear();
+    write!(text.sections[1].value, "{}", stats.count).unwrap();
 }
