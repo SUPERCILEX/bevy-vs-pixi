@@ -8,7 +8,6 @@ use bevy::{
     DefaultPlugins,
 };
 use bevy_prototype_lyon::plugin::ShapePlugin;
-use bevy_screen_diags::ScreenDiagsPlugin;
 
 mod rectangles;
 
@@ -30,7 +29,6 @@ fn main() {
     })
     .insert_resource(ClearColor(Color::WHITE))
     .add_plugins(DefaultPlugins)
-    .add_plugin(ScreenDiagsPlugin)
     .add_plugin(ShapePlugin)
     .add_plugin(rectangles::RectanglesPlugin)
     .add_startup_system(setup_system);
