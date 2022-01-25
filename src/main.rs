@@ -12,18 +12,23 @@ use bevy_prototype_lyon::plugin::ShapePlugin;
 mod rectangles;
 
 fn main() {
-    App::new()
-        .insert_resource(WindowDescriptor {
-            title: "Rectangle canvas benchmark".to_string(),
-            width: 1000.,
-            height: 765.25,
-            ..Default::default()
-        })
-        .insert_resource(ClearColor(Color::WHITE))
-        .add_plugins(DefaultPlugins)
-        .add_plugin(FrameTimeDiagnosticsPlugin::default())
-        .add_plugin(LogDiagnosticsPlugin::default())
-        .add_plugin(ShapePlugin)
+    let mut app = App::new();
+
+    app.insert_resource(WindowDescriptor {
+        title: "Rectangle canvas benchmark".to_string(),
+        width: 1000.,
+        height: 765.25,
+        ..Default::default()
+    })
+    .insert_resource(ClearColor(Color::WHITE))
+    .add_plugins(DefaultPlugins);
+
+    if cfg!(debug_assertions) {
+        app.add_plugin(FrameTimeDiagnosticsPlugin::default())
+            .add_plugin(LogDiagnosticsPlugin::default());
+    }
+
+    app.add_plugin(ShapePlugin)
         .add_startup_system(setup_system)
         .add_startup_system(rectangles::setup)
         .add_system(rectangles::bounds_updater)
