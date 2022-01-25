@@ -26,4 +26,4 @@ strip = true
 [profile.web-release]
 inherits = "release"
 opt-level = "s"
-strip = true
+strip = "debuginfo"

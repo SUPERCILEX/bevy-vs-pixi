@@ -9,6 +9,7 @@ use bevy::{
     },
     input::{mouse::MouseButton, Input},
     math::{Rect, Vec2, Vec3},
+    prelude::UiCameraBundle,
     render::color::Color,
     text::{Text, TextSection, TextStyle},
     transform::components::Transform,
@@ -66,6 +67,7 @@ fn setup(
 ) {
     spawn_rectangles(&mut commands, &windows, stats.count);
 
+    commands.spawn_bundle(UiCameraBundle::default());
     commands
         .spawn_bundle(TextBundle {
             text: Text {
