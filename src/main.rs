@@ -4,6 +4,7 @@ use bevy::{
     diagnostic::{FrameTimeDiagnosticsPlugin, LogDiagnosticsPlugin},
     ecs::system::Commands,
     render::{camera::OrthographicCameraBundle, color::Color},
+    ui::entity::UiCameraBundle,
     window::WindowDescriptor,
     DefaultPlugins,
 };
@@ -33,7 +34,7 @@ fn main() {
     .add_plugin(ScreenDiagsPlugin)
     .add_plugin(ShapePlugin)
     .add_plugin(rectangles::RectanglesPlugin)
-    .add_startup_system(setup_system);
+    .add_startup_system(setup_cameras);
 
     if cfg!(debug_assertions) {
         app.add_plugin(FrameTimeDiagnosticsPlugin::default())
@@ -43,6 +44,7 @@ fn main() {
     app.run();
 }
 
-fn setup_system(mut commands: Commands) {
+fn setup_cameras(mut commands: Commands) {
     commands.spawn_bundle(OrthographicCameraBundle::new_2d());
+    commands.spawn_bundle(UiCameraBundle::default());
 }
