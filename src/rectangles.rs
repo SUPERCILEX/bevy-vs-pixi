@@ -1,11 +1,12 @@
 use std::fmt::Write;
 
 use bevy::{
-    app::{App, Events, Plugin},
+    app::{App, Plugin},
     asset::AssetServer,
     core::Time,
     ecs::{
         component::Component,
+        event::Events,
         query::With,
         system::{Commands, Query, Res, ResMut},
     },
@@ -30,7 +31,7 @@ pub struct RectanglesPlugin;
 
 impl Plugin for RectanglesPlugin {
     fn build(&self, app: &mut App) {
-        app.insert_resource(Stats::default())
+        app.init_resource::<Stats>()
             .add_startup_system(setup)
             .add_system(bounds_updater)
             .add_system(movement)
@@ -161,8 +162,8 @@ fn bounds_updater(
     resize_event: Res<Events<WindowResized>>,
     mut rectangles_query: Query<&mut RectangleObject>,
 ) {
-    let target_event = resize_event
-        .get_reader()
+    let mut reader = resize_event.get_reader();
+    let target_event = reader
         .iter(&resize_event)
         .filter(|e| e.id.is_primary())
         .last();
