@@ -1,4 +1,4 @@
-use std::fmt::Write;
+use std::{cmp::max, fmt::Write};
 
 use bevy::{
     app::{App, Plugin},
@@ -6,6 +6,7 @@ use bevy::{
     core::Time,
     ecs::{
         component::Component,
+        entity::Entity,
         event::Events,
         query::With,
         system::{Commands, Query, Res, ResMut},
@@ -110,10 +111,16 @@ fn mouse_handler(
     mouse_button_input: Res<Input<MouseButton>>,
     windows: Res<Windows>,
     mut stats: ResMut<Stats>,
+    rectangles: Query<Entity, With<RectangleObject>>,
 ) {
+    let old = stats.count;
     if mouse_button_input.just_released(MouseButton::Left) {
-        spawn_rectangles(&mut commands, &windows, stats.count);
-        stats.count *= 2;
+        stats.count = max(1, stats.count * 2);
+        spawn_rectangles(&mut commands, &windows, stats.count - old);
+    }
+    if mouse_button_input.just_released(MouseButton::Right) {
+        stats.count /= 2;
+        despawn_rectangles(&mut commands, rectangles, old - stats.count);
     }
 }
 
@@ -155,6 +162,16 @@ fn spawn_rectangles(commands: &mut Commands, windows: &Windows, num: u32) {
                 width: dimensions.x,
                 teleport_target: teleport_target - dimensions.x,
             });
+    }
+}
+
+fn despawn_rectangles(
+    commands: &mut Commands,
+    rectangles: Query<Entity, With<RectangleObject>>,
+    num: u32,
+) {
+    for r in rectangles.iter().take(num as usize) {
+        commands.entity(r).despawn();
     }
 }
 
