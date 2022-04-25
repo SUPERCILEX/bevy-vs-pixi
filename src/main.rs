@@ -1,13 +1,7 @@
 use bevy::{
-    app::App,
-    core_pipeline::ClearColor,
     diagnostic::{FrameTimeDiagnosticsPlugin, LogDiagnosticsPlugin},
-    ecs::system::{Commands, Res, ResMut},
-    input::{keyboard::KeyCode, Input},
-    render::{camera::OrthographicCameraBundle, color::Color},
-    ui::entity::UiCameraBundle,
-    window::{WindowDescriptor, WindowMode, Windows},
-    DefaultPlugins,
+    prelude::*,
+    window::WindowMode,
 };
 use bevy_prototype_lyon::plugin::ShapePlugin;
 use bevy_screen_diags::ScreenDiagsPlugin;

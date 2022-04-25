@@ -1,31 +1,7 @@
 use std::{cmp::max, fmt::Write};
 
-use bevy::{
-    app::{App, Plugin},
-    asset::AssetServer,
-    core::Time,
-    ecs::{
-        component::Component,
-        entity::Entity,
-        event::Events,
-        query::With,
-        system::{Commands, Query, Res, ResMut},
-    },
-    input::{mouse::MouseButton, Input},
-    math::{Rect, Vec2, Vec3},
-    render::color::Color,
-    text::{Text, TextSection, TextStyle},
-    transform::components::Transform,
-    ui::{entity::TextBundle, PositionType, Style, Val},
-    window::{WindowResized, Windows},
-};
-use bevy_prototype_lyon::{
-    draw::{DrawMode, FillMode, StrokeMode},
-    geometry::GeometryBuilder,
-    prelude::FillOptions,
-    shapes,
-    shapes::RectangleOrigin,
-};
+use bevy::{ecs::event::Events, prelude::*, window::WindowResized};
+use bevy_prototype_lyon::prelude::*;
 use rand::{thread_rng, Rng};
 
 pub struct RectanglesPlugin;
