@@ -18,7 +18,7 @@ fn main() {
         title: "Rectangle canvas benchmark".to_string(),
         width: 1000.,
         height: 765.25,
-        ..Default::default()
+        ..default()
     })
     .insert_resource(ClearColor(Color::WHITE))
     .add_plugins(DefaultPlugins)

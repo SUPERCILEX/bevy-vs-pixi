@@ -67,17 +67,17 @@ fn setup(
                         },
                     },
                 ],
-                ..Default::default()
+                ..default()
             },
             style: Style {
                 position_type: PositionType::Absolute,
                 position: Rect {
                     top: Val::Px(0.),
-                    ..Default::default()
+                    ..default()
                 },
-                ..Default::default()
+                ..default()
             },
-            ..Default::default()
+            ..default()
         })
         .insert(StatsText);
 }
