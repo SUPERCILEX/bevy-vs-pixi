@@ -10,13 +10,11 @@ categories = ["games"]
 license = "Apache-2.0"
 
 [dependencies]
-bevy = { version = "0.7.0", default-features = false, features = ["render", "bevy_winit", "x11"] }
-bevy_prototype_lyon = "0.5.0"
-bevy_screen_diags = { git = "https://github.com/supercilex/bevy_screen_diags", branch = "0.7" }
+bevy = { version = "0.8.0", default-features = false, features = ["render", "bevy_winit", "x11"] }
+bevy_prototype_lyon = "0.6.0"
+log = { version = "0.4.17", features = ["release_max_level_off"] }
 rand = "0.8.5"
-
-[target.'cfg(target_arch = "wasm32")'.dependencies]
-console_error_panic_hook = "0.1.7"
+tracing = { version = "0.1.36", features = ["release_max_level_off"] }
 
 [profile.release]
 lto = true

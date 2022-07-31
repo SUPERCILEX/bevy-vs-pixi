@@ -8,13 +8,13 @@ pub struct RectanglesPlugin;
 
 impl Plugin for RectanglesPlugin {
     fn build(&self, app: &mut App) {
-        app.init_resource::<Stats>()
-            .add_startup_system(setup)
-            .add_system(bounds_updater)
-            .add_system(movement)
-            .add_system(collision_detection)
-            .add_system(mouse_handler)
-            .add_system(stats_system);
+        app.init_resource::<Stats>();
+        app.add_startup_system(setup);
+        app.add_system(bounds_updater);
+        app.add_system(movement);
+        app.add_system(collision_detection);
+        app.add_system(mouse_handler);
+        app.add_system(stats_system);
     }
 }
 
@@ -71,7 +71,7 @@ fn setup(
             },
             style: Style {
                 position_type: PositionType::Absolute,
-                position: Rect {
+                position: UiRect {
                     top: Val::Px(0.),
                     ..default()
                 },
