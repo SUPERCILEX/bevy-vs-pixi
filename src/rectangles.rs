@@ -1,6 +1,10 @@
 use std::{cmp::max, fmt::Write};
 
-use bevy::{ecs::event::Events, prelude::*, window::WindowResized};
+use bevy::{
+    ecs::event::Events,
+    prelude::*,
+    window::{PrimaryWindow, WindowResized},
+};
 use bevy_prototype_lyon::prelude::*;
 use rand::{thread_rng, Rng};
 
@@ -10,21 +14,19 @@ impl Plugin for RectanglesPlugin {
     fn build(&self, app: &mut App) {
         app.init_resource::<Stats>();
         app.add_startup_system(setup);
-        app.add_system(bounds_updater);
-        app.add_system(movement);
-        app.add_system(collision_detection);
-        app.add_system(mouse_handler);
-        app.add_system(stats_system);
+        app.add_systems((bounds_updater, movement, collision_detection).chain());
+        app.add_systems((mouse_handler, stats_system).chain());
     }
 }
 
+#[derive(Resource)]
 struct Stats {
     count: u32,
 }
 
 impl Default for Stats {
     fn default() -> Self {
-        Stats { count: 250 }
+        Self { count: 250 }
     }
 }
 
@@ -40,14 +42,18 @@ struct RectangleObject {
 
 fn setup(
     mut commands: Commands,
-    windows: Res<Windows>,
+    window: Query<&Window, With<PrimaryWindow>>,
     stats: Res<Stats>,
     asset_server: Res<AssetServer>,
 ) {
-    spawn_rectangles(&mut commands, &windows, stats.count);
+    let Ok(window) = window.get_single() else {
+        return;
+    };
+
+    spawn_rectangles(&mut commands, window, stats.count);
 
     commands
-        .spawn_bundle(TextBundle {
+        .spawn(TextBundle {
             text: Text {
                 sections: vec![
                     TextSection {
@@ -59,7 +65,7 @@ fn setup(
                         },
                     },
                     TextSection {
-                        value: "".to_string(),
+                        value: String::new(),
                         style: TextStyle {
                             font: asset_server.load("fonts/FiraSans-Bold.ttf"),
                             font_size: 40.0,
@@ -85,14 +91,18 @@ fn setup(
 fn mouse_handler(
     mut commands: Commands,
     mouse_button_input: Res<Input<MouseButton>>,
-    windows: Res<Windows>,
+    window: Query<&Window, With<PrimaryWindow>>,
     mut stats: ResMut<Stats>,
     rectangles: Query<Entity, With<RectangleObject>>,
 ) {
+    let Ok(window) = window.get_single() else {
+        return;
+    };
+
     let old = stats.count;
     if mouse_button_input.just_released(MouseButton::Left) {
         stats.count = max(1, stats.count * 2);
-        spawn_rectangles(&mut commands, &windows, stats.count - old);
+        spawn_rectangles(&mut commands, window, stats.count - old);
     }
     if mouse_button_input.just_released(MouseButton::Right) {
         stats.count /= 2;
@@ -100,9 +110,8 @@ fn mouse_handler(
     }
 }
 
-fn spawn_rectangles(commands: &mut Commands, windows: &Windows, num: u32) {
+fn spawn_rectangles(commands: &mut Commands, window: &Window, num: u32) {
     let mut rng = thread_rng();
-    let window = windows.get_primary().unwrap();
     let (width, height) = (window.width(), window.height());
     let teleport_target = -(width / 2.);
 
@@ -110,34 +119,35 @@ fn spawn_rectangles(commands: &mut Commands, windows: &Windows, num: u32) {
         extents: Vec2::ZERO,
         origin: RectangleOrigin::BottomLeft,
     };
-    let default_draw_mode = DrawMode::Outlined {
-        fill_mode: FillMode {
-            options: FillOptions::default().with_intersections(false),
-            color: Color::WHITE,
-        },
-        outline_mode: StrokeMode::new(Color::BLACK, 1.5),
+    let fill = Fill {
+        options: FillOptions::default().with_intersections(false),
+        color: Color::WHITE,
     };
+    let stroke = Stroke::new(Color::BLACK, 1.5);
 
     for _ in 0..num {
-        let dimensions = Vec2::splat(10. + rng.gen::<f32>() * 40.);
-        commands
-            .spawn_bundle(GeometryBuilder::build_as(
-                &shapes::Rectangle {
-                    extents: dimensions,
-                    ..default_shape
-                },
-                default_draw_mode,
-                Transform::from_translation(Vec3::new(
-                    (rng.gen::<f32>() - 0.5) * width,
-                    (rng.gen::<f32>() - 0.5) * height,
-                    0.,
-                )),
-            ))
-            .insert(RectangleObject {
+        let dimensions = Vec2::splat(rng.gen::<f32>().mul_add(40., 10.));
+        commands.spawn((
+            RectangleObject {
                 velocity: rng.gen_range(60.0..120.0),
                 width: dimensions.x,
                 teleport_target: teleport_target - dimensions.x,
-            });
+            },
+            ShapeBundle {
+                path: GeometryBuilder::build_as(&shapes::Rectangle {
+                    extents: dimensions,
+                    ..default_shape
+                }),
+                transform: Transform::from_translation(Vec3::new(
+                    (rng.gen::<f32>() - 0.5) * width,
+                    (rng.gen::<f32>() - 0.5) * height,
+                    rng.gen::<f32>(),
+                )),
+                ..default()
+            },
+            fill,
+            stroke,
+        ));
     }
 }
 
@@ -152,35 +162,43 @@ fn despawn_rectangles(
 }
 
 fn bounds_updater(
+    window: Query<Entity, With<PrimaryWindow>>,
     resize_event: Res<Events<WindowResized>>,
     mut rectangles_query: Query<&mut RectangleObject>,
 ) {
-    let mut reader = resize_event.get_reader();
-    let target_event = reader
-        .iter(&resize_event)
-        .filter(|e| e.id.is_primary())
-        .last();
+    let Ok(window_id) = window.get_single() else {
+        return;
+    };
 
-    if let Some(e) = target_event {
+    let mut reader = resize_event.get_reader();
+    if let Some(e) = reader
+        .iter(&resize_event)
+        .filter(|e| e.window == window_id)
+        .last()
+    {
         let teleport_target = -(e.width / 2.);
-        rectangles_query.for_each_mut(|mut r| {
+        rectangles_query.par_iter_mut().for_each_mut(|mut r| {
             r.teleport_target = teleport_target - r.width;
         });
     }
 }
 
 fn movement(time: Res<Time>, mut rectangles_query: Query<(&RectangleObject, &mut Transform)>) {
-    rectangles_query.for_each_mut(|(r, mut transform)| {
-        transform.translation.x -= r.velocity * time.delta_seconds();
-    });
+    rectangles_query
+        .par_iter_mut()
+        .for_each_mut(|(r, mut transform)| {
+            transform.translation.x -= r.velocity * time.delta_seconds();
+        });
 }
 
 fn collision_detection(mut rectangles_query: Query<(&RectangleObject, &mut Transform)>) {
-    rectangles_query.for_each_mut(|(r, mut transform)| {
-        if transform.translation.x < r.teleport_target {
-            transform.translation.x = -transform.translation.x;
-        }
-    });
+    rectangles_query
+        .par_iter_mut()
+        .for_each_mut(|(r, mut transform)| {
+            if transform.translation.x < r.teleport_target {
+                transform.translation.x = -transform.translation.x;
+            }
+        });
 }
 
 fn stats_system(stats: Res<Stats>, mut query: Query<&mut Text, With<StatsText>>) {

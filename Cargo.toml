@@ -10,11 +10,11 @@ categories = ["games"]
 license = "Apache-2.0"
 
 [dependencies]
-bevy = { version = "0.8.0", default-features = false, features = ["render", "bevy_winit", "x11"] }
-bevy_prototype_lyon = "0.6.0"
+bevy = { version = "0.10.0", default-features = false, features = ["bevy_render", "bevy_core_pipeline", "bevy_winit", "bevy_ui", "bevy_text", "x11"] }
+bevy_prototype_lyon = "0.8.0"
 log = { version = "0.4.17", features = ["release_max_level_off"] }
 rand = "0.8.5"
-tracing = { version = "0.1.36", features = ["release_max_level_off"] }
+tracing = { version = "0.1.37", features = ["release_max_level_off"] }
 
 [profile.release]
 lto = true
