@@ -4,7 +4,6 @@ use bevy::{
     prelude::*,
     window::{PrimaryWindow, WindowMode, WindowResolution},
 };
-use bevy_prototype_lyon::plugin::ShapePlugin;
 
 mod rectangles;
 
@@ -20,7 +19,6 @@ fn main() {
         ..default()
     }));
     app.insert_resource(ClearColor(Color::WHITE));
-    app.add_plugin(ShapePlugin);
     app.add_plugin(rectangles::RectanglesPlugin);
     app.add_startup_system(setup_cameras);
     app.add_system(full_screen_toggle.run_if(pressed_f));

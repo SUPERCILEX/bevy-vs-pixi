@@ -5,7 +5,6 @@ use bevy::{
     prelude::*,
     window::{PrimaryWindow, WindowResized},
 };
-use bevy_prototype_lyon::prelude::*;
 use rand::{thread_rng, Rng};
 
 pub struct RectanglesPlugin;
@@ -115,39 +114,40 @@ fn spawn_rectangles(commands: &mut Commands, window: &Window, num: u32) {
     let (width, height) = (window.width(), window.height());
     let teleport_target = -(width / 2.);
 
-    let default_shape = shapes::Rectangle {
-        extents: Vec2::ZERO,
-        origin: RectangleOrigin::BottomLeft,
-    };
-    let fill = Fill {
-        options: FillOptions::default().with_intersections(false),
-        color: Color::WHITE,
-    };
-    let stroke = Stroke::new(Color::BLACK, 1.5);
-
     for _ in 0..num {
         let dimensions = Vec2::splat(rng.gen::<f32>().mul_add(40., 10.));
-        commands.spawn((
-            RectangleObject {
-                velocity: rng.gen_range(60.0..120.0),
-                width: dimensions.x,
-                teleport_target: teleport_target - dimensions.x,
-            },
-            ShapeBundle {
-                path: GeometryBuilder::build_as(&shapes::Rectangle {
-                    extents: dimensions,
-                    ..default_shape
-                }),
-                transform: Transform::from_translation(Vec3::new(
-                    (rng.gen::<f32>() - 0.5) * width,
-                    (rng.gen::<f32>() - 0.5) * height,
-                    rng.gen::<f32>(),
-                )),
-                ..default()
-            },
-            fill,
-            stroke,
-        ));
+        commands
+            .spawn((
+                RectangleObject {
+                    velocity: rng.gen_range(60.0..120.0),
+                    width: dimensions.x,
+                    teleport_target: teleport_target - dimensions.x,
+                },
+                SpriteBundle {
+                    sprite: Sprite {
+                        color: Color::BLACK,
+                        custom_size: Some(dimensions),
+                        ..default()
+                    },
+                    transform: Transform::from_xyz(
+                        (rng.gen::<f32>() - 0.5) * width,
+                        (rng.gen::<f32>() - 0.5) * height,
+                        rng.gen::<f32>(),
+                    ),
+                    ..default()
+                },
+            ))
+            .with_children(|children| {
+                children.spawn(SpriteBundle {
+                    sprite: Sprite {
+                        color: Color::WHITE,
+                        custom_size: Some(dimensions - Vec2::splat(3.)),
+                        ..default()
+                    },
+                    transform: Transform::from_xyz(0., 0., f32::EPSILON),
+                    ..default()
+                });
+            });
     }
 }
 
@@ -157,7 +157,7 @@ fn despawn_rectangles(
     num: u32,
 ) {
     for r in rectangles.iter().take(num as usize) {
-        commands.entity(r).despawn();
+        commands.entity(r).despawn_recursive();
     }
 }
 
