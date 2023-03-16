@@ -1,4 +1,4 @@
-use std::{cmp::max, fmt::Write};
+use std::cmp::max;
 
 use bevy::{
     ecs::event::Events,
@@ -14,13 +14,13 @@ impl Plugin for RectanglesPlugin {
         app.init_resource::<Stats>();
         app.add_startup_system(setup);
         app.add_systems((bounds_updater, movement, collision_detection).chain());
-        app.add_systems((mouse_handler, stats_system).chain());
+        app.add_system(mouse_handler);
     }
 }
 
 #[derive(Resource)]
-struct Stats {
-    count: u32,
+pub struct Stats {
+    pub count: u32,
 }
 
 impl Default for Stats {
@@ -30,61 +30,18 @@ impl Default for Stats {
 }
 
 #[derive(Component)]
-struct StatsText;
-
-#[derive(Component)]
 struct RectangleObject {
     velocity: f32,
     width: f32,
     teleport_target: f32,
 }
 
-fn setup(
-    mut commands: Commands,
-    window: Query<&Window, With<PrimaryWindow>>,
-    stats: Res<Stats>,
-    asset_server: Res<AssetServer>,
-) {
+fn setup(mut commands: Commands, window: Query<&Window, With<PrimaryWindow>>, stats: Res<Stats>) {
     let Ok(window) = window.get_single() else {
         return;
     };
 
     spawn_rectangles(&mut commands, window, stats.count);
-
-    commands
-        .spawn(TextBundle {
-            text: Text {
-                sections: vec![
-                    TextSection {
-                        value: "Rectangle count: ".to_string(),
-                        style: TextStyle {
-                            font: asset_server.load("fonts/FiraSans-Bold.ttf"),
-                            font_size: 40.0,
-                            color: Color::BLACK,
-                        },
-                    },
-                    TextSection {
-                        value: String::new(),
-                        style: TextStyle {
-                            font: asset_server.load("fonts/FiraSans-Bold.ttf"),
-                            font_size: 40.0,
-                            color: Color::BLACK,
-                        },
-                    },
-                ],
-                ..default()
-            },
-            style: Style {
-                position_type: PositionType::Absolute,
-                position: UiRect {
-                    top: Val::Px(0.),
-                    ..default()
-                },
-                ..default()
-            },
-            ..default()
-        })
-        .insert(StatsText);
 }
 
 fn mouse_handler(
@@ -199,14 +156,4 @@ fn collision_detection(mut rectangles_query: Query<(&RectangleObject, &mut Trans
                 transform.translation.x = -transform.translation.x;
             }
         });
-}
-
-fn stats_system(stats: Res<Stats>, mut query: Query<&mut Text, With<StatsText>>) {
-    if !stats.is_changed() {
-        return;
-    }
-
-    let mut text = query.single_mut();
-    text.sections[1].value.clear();
-    write!(text.sections[1].value, "{}", stats.count).unwrap();
 }
