@@ -66,6 +66,8 @@ fn setup_ui(mut commands: Commands, asset_server: Res<AssetServer>) {
         color: Color::hex("a96cff").unwrap(),
     };
 
+    // TODO remove container and move background color to TextBundle:
+    //  https://github.com/bevyengine/bevy/issues/6879
     commands
         .spawn(NodeBundle {
             style: Style {
