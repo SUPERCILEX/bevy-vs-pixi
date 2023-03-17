@@ -5,7 +5,8 @@ use bevy::{
     prelude::*,
     window::{PrimaryWindow, WindowResized},
 };
-use rand::{thread_rng, Rng};
+use rand::{Rng, SeedableRng};
+use rand_xoshiro::Xoshiro256PlusPlus;
 
 const BORDER_COLOR: Color = Color::BLACK;
 // Workaround for poor batching with mixed WHITE and other-colored sprites.
@@ -17,6 +18,7 @@ pub struct RectanglesPlugin;
 impl Plugin for RectanglesPlugin {
     fn build(&self, app: &mut App) {
         app.init_resource::<Stats>();
+        app.init_resource::<PseudoRng>();
         app.add_startup_system(setup);
         app.add_systems((bounds_updater, movement, collision_detection).chain());
         app.add_system(mouse_handler);
@@ -34,6 +36,15 @@ impl Default for Stats {
     }
 }
 
+#[derive(Resource)]
+pub struct PseudoRng(Xoshiro256PlusPlus);
+
+impl Default for PseudoRng {
+    fn default() -> Self {
+        Self(Xoshiro256PlusPlus::seed_from_u64(395992934456271))
+    }
+}
+
 #[derive(Component)]
 struct RectangleObject {
     velocity: f32,
@@ -41,12 +52,17 @@ struct RectangleObject {
     teleport_target: f32,
 }
 
-fn setup(mut commands: Commands, window: Query<&Window, With<PrimaryWindow>>, stats: Res<Stats>) {
+fn setup(
+    mut commands: Commands,
+    window: Query<&Window, With<PrimaryWindow>>,
+    stats: Res<Stats>,
+    mut rng: ResMut<PseudoRng>,
+) {
     let Ok(window) = window.get_single() else {
         return;
     };
 
-    spawn_rectangles(&mut commands, window, stats.count);
+    spawn_rectangles(&mut commands, window, &mut rng.0, stats.count);
 }
 
 fn mouse_handler(
@@ -55,6 +71,7 @@ fn mouse_handler(
     window: Query<&Window, With<PrimaryWindow>>,
     mut stats: ResMut<Stats>,
     rectangles: Query<Entity, With<RectangleObject>>,
+    mut rng: ResMut<PseudoRng>,
 ) {
     let Ok(window) = window.get_single() else {
         return;
@@ -63,7 +80,7 @@ fn mouse_handler(
     let old = stats.count;
     if mouse_button_input.just_released(MouseButton::Left) {
         stats.count = max(1, stats.count * 2);
-        spawn_rectangles(&mut commands, window, stats.count - old);
+        spawn_rectangles(&mut commands, window, &mut rng.0, stats.count - old);
     }
     if mouse_button_input.just_released(MouseButton::Right) {
         stats.count /= 2;
@@ -71,8 +88,12 @@ fn mouse_handler(
     }
 }
 
-fn spawn_rectangles(commands: &mut Commands, window: &Window, num: u32) {
-    let mut rng = thread_rng();
+fn spawn_rectangles(
+    commands: &mut Commands,
+    window: &Window,
+    rng: &mut Xoshiro256PlusPlus,
+    num: u32,
+) {
     let (width, height) = (window.width(), window.height());
     let teleport_target = -(width / 2.);
 
