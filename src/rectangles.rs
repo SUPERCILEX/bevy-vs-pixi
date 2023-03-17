@@ -7,6 +7,11 @@ use bevy::{
 };
 use rand::{thread_rng, Rng};
 
+// Workaround for poor batching with mixed WHITE and other-colored sprites.
+// See Bevy#8100
+const FILL_COLOR: Color = Color::rgb(1.0 - f32::EPSILON, 1.0, 1.0);
+const BORDER_COLOR: Color = Color::BLACK;
+
 pub struct RectanglesPlugin;
 
 impl Plugin for RectanglesPlugin {
@@ -125,7 +130,7 @@ fn spawn_rectangles(commands: &mut Commands, window: &Window, num: u32) {
                 },
                 SpriteBundle {
                     sprite: Sprite {
-                        color: Color::BLACK,
+                        color: BORDER_COLOR,
                         custom_size: Some(dimensions),
                         ..default()
                     },
@@ -140,7 +145,7 @@ fn spawn_rectangles(commands: &mut Commands, window: &Window, num: u32) {
             .with_children(|children| {
                 children.spawn(SpriteBundle {
                     sprite: Sprite {
-                        color: Color::WHITE,
+                        color: FILL_COLOR,
                         custom_size: Some(dimensions - Vec2::splat(3.)),
                         ..default()
                     },
