@@ -1,12 +1,14 @@
+use std::{fmt::Write, time::Duration};
+
 use bevy::{
-    diagnostic::{Diagnostics, FrameTimeDiagnosticsPlugin},
+    diagnostic::{Diagnostic, Diagnostics, FrameTimeDiagnosticsPlugin},
     ecs::schedule::{LogLevel, ScheduleBuildSettings},
     prelude::*,
     time::common_conditions::on_timer,
     window::{PrimaryWindow, WindowMode, WindowResolution},
 };
+
 use rectangles::Stats;
-use std::{fmt::Write, time::Duration};
 
 mod rectangles;
 
@@ -27,7 +29,7 @@ fn main() {
     app.add_startup_system(setup_ui);
     app.add_system(full_screen_toggle.run_if(pressed_f));
     app.add_system(update_stats.run_if(resource_changed::<Stats>()));
-    app.add_system(update_fps.run_if(on_timer(Duration::from_secs_f32(1.0))));
+    app.add_system(update_fps.run_if(on_timer(Duration::from_secs(1))));
 
     app.add_plugin(FrameTimeDiagnosticsPlugin::default());
 
@@ -64,7 +66,6 @@ fn setup_ui(mut commands: Commands, asset_server: Res<AssetServer>) {
         color: Color::hex("a96cff").unwrap(),
     };
 
-    // This extra container is necessary. See Bevy#6879.
     commands
         .spawn(NodeBundle {
             style: Style {
@@ -82,19 +83,12 @@ fn setup_ui(mut commands: Commands, asset_server: Res<AssetServer>) {
         })
         .with_children(|parent| {
             parent.spawn((
-                TextBundle {
-                    text: Text {
-                        sections: vec![
-                            TextSection::new("Count: ".to_string(), text_style.clone()),
-                            TextSection::new("", text_style.clone()),
-                            TextSection::new("\nFPS: ".to_string(), text_style.clone()),
-                            TextSection::new("0.00", text_style),
-                        ],
-                        ..default()
-                    },
-
-                    ..default()
-                },
+                TextBundle::from_sections([
+                    TextSection::new("Count: ".to_string(), text_style.clone()),
+                    TextSection::new("", text_style.clone()),
+                    TextSection::new("\nFPS: ".to_string(), text_style.clone()),
+                    TextSection::new("0.00", text_style),
+                ]),
                 StatsText,
             ));
         });
@@ -125,7 +119,7 @@ fn update_stats(stats: Res<Stats>, mut query: Query<&mut Text, With<StatsText>>)
 fn update_fps(diagnostics: Res<Diagnostics>, mut query: Query<&mut Text, With<StatsText>>) {
     if let Some(fps) = diagnostics
         .get(FrameTimeDiagnosticsPlugin::FPS)
-        .and_then(|fps| fps.smoothed())
+        .and_then(Diagnostic::smoothed)
     {
         let mut text = query.single_mut();
         text.sections[3].value.clear();
