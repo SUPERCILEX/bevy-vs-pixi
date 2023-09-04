@@ -1,7 +1,8 @@
 use std::{fmt::Write, time::Duration};
 
 use bevy::{
-    diagnostic::{Diagnostic, Diagnostics, FrameTimeDiagnosticsPlugin},
+    app::MainScheduleOrder,
+    diagnostic::{Diagnostic, DiagnosticsStore, FrameTimeDiagnosticsPlugin},
     ecs::schedule::{LogLevel, ScheduleBuildSettings},
     prelude::*,
     time::common_conditions::on_timer,
@@ -24,22 +25,17 @@ fn main() {
         ..default()
     }));
     app.insert_resource(ClearColor(Color::WHITE));
-    app.add_plugin(rectangles::RectanglesPlugin);
-    app.add_startup_system(setup_cameras);
-    app.add_startup_system(setup_ui);
-    app.add_system(full_screen_toggle.run_if(pressed_f));
-    app.add_system(update_stats.run_if(resource_changed::<Stats>()));
-    app.add_system(update_fps.run_if(on_timer(Duration::from_secs(1))));
+    app.add_plugins(rectangles::RectanglesPlugin);
+    app.add_systems(Startup, setup_cameras);
+    app.add_systems(Startup, setup_ui);
+    app.add_systems(Update, full_screen_toggle.run_if(pressed_f));
+    app.add_systems(Update, update_stats.run_if(resource_changed::<Stats>()));
+    app.add_systems(Update, update_fps.run_if(on_timer(Duration::from_secs(1))));
 
-    app.add_plugin(FrameTimeDiagnosticsPlugin::default());
+    app.add_plugins(FrameTimeDiagnosticsPlugin::default());
 
     if cfg!(debug_assertions) {
-        for schedule in [
-            CoreSchedule::Startup,
-            CoreSchedule::Main,
-            CoreSchedule::Outer,
-            CoreSchedule::FixedUpdate,
-        ] {
+        for schedule in MainScheduleOrder::default().labels {
             app.edit_schedule(schedule, |schedule| {
                 schedule.set_build_settings(ScheduleBuildSettings {
                     ambiguity_detection: LogLevel::Warn,
@@ -59,11 +55,11 @@ fn setup_cameras(mut commands: Commands) {
     commands.spawn(Camera2dBundle::default());
 }
 
-fn setup_ui(mut commands: Commands, asset_server: Res<AssetServer>) {
+fn setup_ui(mut commands: Commands) {
     let text_style = TextStyle {
-        font: asset_server.load("fonts/FiraSans-Bold.ttf"),
         font_size: 30.0,
         color: Color::hex("a96cff").unwrap(),
+        ..default()
     };
 
     // TODO remove container and move background color to TextBundle:
@@ -72,11 +68,8 @@ fn setup_ui(mut commands: Commands, asset_server: Res<AssetServer>) {
         .spawn(NodeBundle {
             style: Style {
                 position_type: PositionType::Absolute,
-                position: UiRect {
-                    top: Val::Px(0.),
-                    left: Val::Px(0.),
-                    ..default()
-                },
+                top: Val::Px(0.),
+                left: Val::Px(0.),
                 padding: UiRect::all(Val::Px(5.)),
                 ..default()
             },
@@ -118,7 +111,7 @@ fn update_stats(stats: Res<Stats>, mut query: Query<&mut Text, With<StatsText>>)
     write!(text.sections[1].value, "{}", stats.count).unwrap();
 }
 
-fn update_fps(diagnostics: Res<Diagnostics>, mut query: Query<&mut Text, With<StatsText>>) {
+fn update_fps(diagnostics: Res<DiagnosticsStore>, mut query: Query<&mut Text, With<StatsText>>) {
     if let Some(fps) = diagnostics
         .get(FrameTimeDiagnosticsPlugin::FPS)
         .and_then(Diagnostic::smoothed)

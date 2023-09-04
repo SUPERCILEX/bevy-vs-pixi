@@ -10,23 +10,24 @@ categories = ["games"]
 license = "Apache-2.0"
 
 [dependencies]
-log = { version = "0.4.17", features = ["release_max_level_off"] }
+log = { version = "0.4.20", features = ["release_max_level_off"] }
 rand = { version = "0.8.5", default-features = false }
 rand_xoshiro = "0.6.0"
 tracing = { version = "0.1.37", features = ["release_max_level_off"] }
 
 [dependencies.bevy]
-version = "0.10.0"
+version = "0.11.2"
 default-features = false
 features = [
-    "bevy_render",
-    "bevy_core_pipeline",
     "bevy_winit",
-    "bevy_ui",
+    "bevy_core_pipeline",
+    "bevy_render",
     "bevy_text",
-    "bevy_sprite",
-    "bevy_asset",
+    "bevy_ui",
+    "multi-threaded",
     "x11",
+    "default_font",
+    "webgl2",
 ]
 
 [profile.release]

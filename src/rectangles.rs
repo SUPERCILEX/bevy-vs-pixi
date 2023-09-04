@@ -19,9 +19,12 @@ impl Plugin for RectanglesPlugin {
     fn build(&self, app: &mut App) {
         app.init_resource::<Stats>();
         app.init_resource::<PseudoRng>();
-        app.add_startup_system(setup);
-        app.add_systems((bounds_updater, movement, collision_detection).chain());
-        app.add_system(mouse_handler);
+        app.add_systems(Startup, setup);
+        app.add_systems(
+            Update,
+            (bounds_updater, movement, collision_detection).chain(),
+        );
+        app.add_systems(Update, mouse_handler);
     }
 }
 
