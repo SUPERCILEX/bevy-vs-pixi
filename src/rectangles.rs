@@ -8,11 +8,6 @@ use bevy::{
 use rand::{Rng, SeedableRng};
 use rand_xoshiro::Xoshiro256PlusPlus;
 
-const BORDER_COLOR: Color = Color::BLACK;
-// Workaround for poor batching with mixed WHITE and other-colored sprites.
-// TODO https://github.com/bevyengine/bevy/issues/8100
-const FILL_COLOR: Color = Color::rgb(1.0 - f32::EPSILON, 1.0, 1.0);
-
 pub struct RectanglesPlugin;
 
 impl Plugin for RectanglesPlugin {
@@ -111,7 +106,7 @@ fn spawn_rectangles(
                 },
                 SpriteBundle {
                     sprite: Sprite {
-                        color: BORDER_COLOR,
+                        color: Color::BLACK,
                         custom_size: Some(dimensions),
                         ..default()
                     },
@@ -126,7 +121,7 @@ fn spawn_rectangles(
             .with_children(|children| {
                 children.spawn(SpriteBundle {
                     sprite: Sprite {
-                        color: FILL_COLOR,
+                        color: Color::WHITE,
                         custom_size: Some(dimensions - Vec2::splat(3.)),
                         ..default()
                     },
@@ -158,12 +153,12 @@ fn bounds_updater(
 
     let mut reader = resize_event.get_reader();
     if let Some(e) = reader
-        .iter(&resize_event)
+        .read(&resize_event)
         .filter(|e| e.window == window_id)
         .last()
     {
         let teleport_target = -(e.width / 2.);
-        rectangles_query.par_iter_mut().for_each_mut(|mut r| {
+        rectangles_query.par_iter_mut().for_each(|mut r| {
             r.teleport_target = teleport_target - r.width;
         });
     }
@@ -172,7 +167,7 @@ fn bounds_updater(
 fn movement(time: Res<Time>, mut rectangles_query: Query<(&RectangleObject, &mut Transform)>) {
     rectangles_query
         .par_iter_mut()
-        .for_each_mut(|(r, mut transform)| {
+        .for_each(|(r, mut transform)| {
             transform.translation.x -= r.velocity * time.delta_seconds();
         });
 }
@@ -180,7 +175,7 @@ fn movement(time: Res<Time>, mut rectangles_query: Query<(&RectangleObject, &mut
 fn collision_detection(mut rectangles_query: Query<(&RectangleObject, &mut Transform)>) {
     rectangles_query
         .par_iter_mut()
-        .for_each_mut(|(r, mut transform)| {
+        .for_each(|(r, mut transform)| {
             if transform.translation.x < r.teleport_target {
                 transform.translation.x = -transform.translation.x;
             }
