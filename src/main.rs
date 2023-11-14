@@ -1,3 +1,5 @@
+#![allow(clippy::needless_pass_by_value)]
+
 use std::{fmt::Write, time::Duration};
 
 use bevy::{
@@ -8,7 +10,6 @@ use bevy::{
     time::common_conditions::on_timer,
     window::{PrimaryWindow, WindowMode, WindowResolution},
 };
-
 use rectangles::Stats;
 
 mod rectangles;
@@ -32,7 +33,7 @@ fn main() {
     app.add_systems(Update, update_stats.run_if(resource_changed::<Stats>()));
     app.add_systems(Update, update_fps.run_if(on_timer(Duration::from_secs(1))));
 
-    app.add_plugins(FrameTimeDiagnosticsPlugin::default());
+    app.add_plugins(FrameTimeDiagnosticsPlugin);
 
     if cfg!(debug_assertions) {
         for schedule in MainScheduleOrder::default().labels {

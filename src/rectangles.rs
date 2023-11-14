@@ -8,6 +8,7 @@ use bevy::{
 use rand::{Rng, SeedableRng};
 use rand_xoshiro::Xoshiro256PlusPlus;
 
+#[allow(clippy::module_name_repetitions)]
 pub struct RectanglesPlugin;
 
 impl Plugin for RectanglesPlugin {
@@ -39,7 +40,7 @@ pub struct PseudoRng(Xoshiro256PlusPlus);
 
 impl Default for PseudoRng {
     fn default() -> Self {
-        Self(Xoshiro256PlusPlus::seed_from_u64(395992934456271))
+        Self(Xoshiro256PlusPlus::seed_from_u64(395_992_934_456_271))
     }
 }
 
