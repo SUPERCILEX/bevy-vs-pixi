@@ -16,7 +16,7 @@ rand_xoshiro = "0.6.0"
 tracing = { version = "0.1.40", features = ["release_max_level_off"] }
 
 [dependencies.bevy]
-version = "0.12.0"
+version = "0.12.1"
 default-features = false
 features = [
     "bevy_winit",
@@ -31,7 +31,7 @@ features = [
 ]
 
 [dev-dependencies]
-supercilex-tests = "0.4.0"
+supercilex-tests = { version = "0.4.2", default-features = false }
 
 [profile.release]
 lto = true
