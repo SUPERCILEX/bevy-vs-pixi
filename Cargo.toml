@@ -10,13 +10,13 @@ categories = ["games"]
 license = "Apache-2.0"
 
 [dependencies]
-log = { version = "0.4.20", features = ["release_max_level_off"] }
+log = { version = "0.4.21", features = ["release_max_level_off"] }
 rand = { version = "0.8.5", default-features = false }
 rand_xoshiro = "0.6.0"
 tracing = { version = "0.1.40", features = ["release_max_level_off"] }
 
 [dependencies.bevy]
-version = "0.12.1"
+version = "0.13.1"
 default-features = false
 features = [
     "bevy_winit",
@@ -31,7 +31,7 @@ features = [
 ]
 
 [dev-dependencies]
-supercilex-tests = { version = "0.4.2", default-features = false }
+supercilex-tests = { version = "0.4.4", default-features = false }
 
 [profile.release]
 lto = true
