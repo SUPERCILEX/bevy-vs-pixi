@@ -7,7 +7,6 @@ use bevy::{
 use rand::{Rng, SeedableRng};
 use rand_xoshiro::Xoshiro256PlusPlus;
 
-#[allow(clippy::module_name_repetitions)]
 pub struct RectanglesPlugin;
 
 impl Plugin for RectanglesPlugin {

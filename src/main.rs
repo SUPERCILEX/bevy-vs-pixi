@@ -10,7 +10,6 @@ use bevy::{
     time::common_conditions::on_timer,
     window::{PrimaryWindow, WindowMode, WindowResolution},
 };
-
 use rectangles::Stats;
 
 mod rectangles;
@@ -60,7 +59,7 @@ fn setup_cameras(mut commands: Commands) {
 fn setup_ui(mut commands: Commands) {
     let text_style = TextStyle {
         font_size: 30.0,
-        color: Color::hex("a96cff").unwrap(),
+        color: Srgba::hex("a96cff").unwrap().into(),
         ..default()
     };
 
@@ -75,7 +74,7 @@ fn setup_ui(mut commands: Commands) {
                 padding: UiRect::all(Val::Px(5.)),
                 ..default()
             },
-            background_color: Color::rgba(0.0, 0.0, 0.0, 0.9).into(),
+            background_color: Color::srgba(0.0, 0.0, 0.0, 0.9).into(),
             ..default()
         })
         .with_children(|parent| {
