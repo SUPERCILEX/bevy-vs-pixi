@@ -16,9 +16,11 @@ rand_xoshiro = "0.6.0"
 tracing = { version = "0.1.40", features = ["release_max_level_off"] }
 
 [dependencies.bevy]
-version = "0.14.0"
+version = "0.15"
 default-features = false
 features = [
+    # See Bevy#16568
+    "bevy_window",
     "bevy_winit",
     "bevy_core_pipeline",
     "bevy_render",

@@ -53,40 +53,36 @@ fn main() {
 struct StatsText;
 
 fn setup_cameras(mut commands: Commands) {
-    commands.spawn(Camera2dBundle::default());
+    commands.spawn(Camera2d::default());
 }
 
 fn setup_ui(mut commands: Commands) {
-    let text_style = TextStyle {
-        font_size: 30.0,
-        color: Srgba::hex("a96cff").unwrap().into(),
-        ..default()
-    };
+    let text_style = (
+        TextFont {
+            font_size: 30.0,
+            ..default()
+        },
+        TextColor(Srgba::hex("a96cff").unwrap().into()),
+    );
 
-    // TODO remove container and move background color to TextBundle:
-    //  https://github.com/bevyengine/bevy/issues/6879
     commands
-        .spawn(NodeBundle {
-            style: Style {
+        .spawn((
+            Node {
                 position_type: PositionType::Absolute,
                 top: Val::Px(0.),
                 left: Val::Px(0.),
                 padding: UiRect::all(Val::Px(5.)),
                 ..default()
             },
-            background_color: Color::srgba(0.0, 0.0, 0.0, 0.9).into(),
-            ..default()
-        })
+            BackgroundColor(Color::srgba(0.0, 0.0, 0.0, 0.9).into()),
+        ))
         .with_children(|parent| {
-            parent.spawn((
-                TextBundle::from_sections([
-                    TextSection::new("Count: ".to_string(), text_style.clone()),
-                    TextSection::new("", text_style.clone()),
-                    TextSection::new("\nFPS: ".to_string(), text_style.clone()),
-                    TextSection::new("0.00", text_style),
-                ]),
-                StatsText,
-            ));
+            parent
+                .spawn((Text::default(), StatsText))
+                .with_child((TextSpan::new("Count: "), text_style.clone()))
+                .with_child((TextSpan::new(""), text_style.clone()))
+                .with_child((TextSpan::new("\nFPS: "), text_style.clone()))
+                .with_child((TextSpan::new("0.00"), text_style));
         });
 }
 
@@ -100,25 +96,33 @@ fn full_screen_toggle(mut window: Query<&mut Window, With<PrimaryWindow>>) {
     };
 
     window.mode = if window.mode == WindowMode::Windowed {
-        WindowMode::BorderlessFullscreen
+        WindowMode::BorderlessFullscreen(MonitorSelection::Current)
     } else {
         WindowMode::Windowed
     };
 }
 
-fn update_stats(stats: Res<Stats>, mut query: Query<&mut Text, With<StatsText>>) {
-    let mut text = query.single_mut();
-    text.sections[1].value.clear();
-    write!(text.sections[1].value, "{}", stats.count).unwrap();
+fn update_stats(
+    stats: Res<Stats>,
+    query: Query<Entity, With<StatsText>>,
+    mut writer: TextUiWriter,
+) {
+    let text = query.single();
+    writer.text(text, 2).clear();
+    write!(writer.text(text, 2), "{}", stats.count).unwrap();
 }
 
-fn update_fps(diagnostics: Res<DiagnosticsStore>, mut query: Query<&mut Text, With<StatsText>>) {
+fn update_fps(
+    diagnostics: Res<DiagnosticsStore>,
+    query: Query<Entity, With<StatsText>>,
+    mut writer: TextUiWriter,
+) {
     if let Some(fps) = diagnostics
         .get(&FrameTimeDiagnosticsPlugin::FPS)
         .and_then(Diagnostic::smoothed)
     {
-        let mut text = query.single_mut();
-        text.sections[3].value.clear();
-        write!(text.sections[3].value, "{fps:.2}").unwrap();
+        let text = query.single();
+        writer.text(text, 4).clear();
+        write!(writer.text(text, 4), "{fps:.2}").unwrap();
     }
 }
