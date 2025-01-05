@@ -43,7 +43,7 @@ impl Default for PseudoRng {
 }
 
 #[derive(Component)]
-struct RectangleObject {
+pub struct RectangleObject {
     velocity: f32,
     width: f32,
     teleport_target: f32,
@@ -62,7 +62,7 @@ fn setup(
     spawn_rectangles(&mut commands, window, &mut rng.0, stats.count);
 }
 
-fn mouse_handler(
+pub fn mouse_handler(
     mut commands: Commands,
     mouse_button_input: Res<ButtonInput<MouseButton>>,
     window: Query<&Window, With<PrimaryWindow>>,
