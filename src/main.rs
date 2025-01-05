@@ -53,7 +53,7 @@ fn main() {
 struct StatsText;
 
 fn setup_cameras(mut commands: Commands) {
-    commands.spawn(Camera2d::default());
+    commands.spawn(Camera2d);
 }
 
 fn setup_ui(mut commands: Commands) {
@@ -74,7 +74,7 @@ fn setup_ui(mut commands: Commands) {
                 padding: UiRect::all(Val::Px(5.)),
                 ..default()
             },
-            BackgroundColor(Color::srgba(0.0, 0.0, 0.0, 0.9).into()),
+            BackgroundColor(Color::srgba(0.0, 0.0, 0.0, 0.9)),
         ))
         .with_children(|parent| {
             parent
@@ -107,9 +107,9 @@ fn update_stats(
     query: Query<Entity, With<StatsText>>,
     mut writer: TextUiWriter,
 ) {
-    let text = query.single();
-    writer.text(text, 2).clear();
-    write!(writer.text(text, 2), "{}", stats.count).unwrap();
+    let mut text = writer.text(query.single(), 2);
+    text.clear();
+    write!(text, "{}", stats.count).unwrap();
 }
 
 fn update_fps(
@@ -121,8 +121,8 @@ fn update_fps(
         .get(&FrameTimeDiagnosticsPlugin::FPS)
         .and_then(Diagnostic::smoothed)
     {
-        let text = query.single();
-        writer.text(text, 4).clear();
-        write!(writer.text(text, 4), "{fps:.2}").unwrap();
+        let mut text = writer.text(query.single(), 4);
+        text.clear();
+        write!(text, "{fps:.2}").unwrap();
     }
 }

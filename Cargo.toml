@@ -13,13 +13,13 @@ license = "Apache-2.0"
 log = { version = "0.4.22", features = ["release_max_level_off"] }
 rand = { version = "0.8.5", default-features = false }
 rand_xoshiro = "0.6.0"
-tracing = { version = "0.1.40", features = ["release_max_level_off"] }
+tracing = { version = "0.1.41", features = ["release_max_level_off"] }
 
 [dependencies.bevy]
 version = "0.15"
 default-features = false
 features = [
-    # See Bevy#16568
+    # TODO remove once https://github.com/bevyengine/bevy/pull/16949 is released
     "bevy_window",
     "bevy_winit",
     "bevy_core_pipeline",
@@ -33,7 +33,7 @@ features = [
 ]
 
 [dev-dependencies]
-supercilex-tests = { version = "0.4.7", default-features = false }
+supercilex-tests = { version = "0.4.13", default-features = false }
 
 [profile.release]
 lto = true
