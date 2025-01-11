@@ -95,7 +95,7 @@ fn spawn_rectangles(
     let teleport_target = -(width / 2.);
 
     for _ in 0..num {
-        let dimensions = Vec2::splat(rng.gen::<f32>().mul_add(40., 10.));
+        let dimensions = Vec2::splat(rng.r#gen::<f32>().mul_add(40., 10.));
         commands
             .spawn((
                 RectangleObject {
@@ -109,9 +109,9 @@ fn spawn_rectangles(
                     ..default()
                 },
                 Transform::from_xyz(
-                    (rng.gen::<f32>() - 0.5) * width,
-                    (rng.gen::<f32>() - 0.5) * height,
-                    rng.gen::<f32>(),
+                    (rng.r#gen::<f32>() - 0.5) * width,
+                    (rng.r#gen::<f32>() - 0.5) * height,
+                    rng.r#gen::<f32>(),
                 ),
             ))
             .with_children(|children| {

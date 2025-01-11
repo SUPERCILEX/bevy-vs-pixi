@@ -2,7 +2,7 @@
 name = "bevy_vs_pixi"
 version = "0.1.0"
 authors = ["Alex Saveau <saveau.alexandre@gmail.com>"]
-edition = "2021"
+edition = "2024"
 description = "A Bevy benchmark to compare against https://benchmarks.slaylines.io/"
 repository = "https://github.com/SUPERCILEX/bevy_vs_pixi"
 keywords = ["bevy", "benchmark", "pixijs"]
