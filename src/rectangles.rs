@@ -4,7 +4,10 @@ use bevy::{
     prelude::*,
     window::{PrimaryWindow, WindowResized},
 };
-use rand::{Rng, SeedableRng};
+use rand::{
+    Rng, SeedableRng,
+    distr::{Distribution, Uniform},
+};
 use rand_xoshiro::Xoshiro256PlusPlus;
 
 pub struct RectanglesPlugin;
@@ -18,7 +21,7 @@ impl Plugin for RectanglesPlugin {
             Update,
             (bounds_updater, movement, collision_detection).chain(),
         );
-        app.add_systems(Update, mouse_handler);
+        app.add_systems(Update, mouse_handler.ambiguous_with(bounds_updater));
     }
 }
 
@@ -42,7 +45,7 @@ impl Default for PseudoRng {
     }
 }
 
-#[derive(Component)]
+#[derive(Component, Debug)]
 pub struct RectangleObject {
     velocity: f32,
     width: f32,
@@ -137,21 +140,44 @@ fn despawn_rectangles(
     }
 }
 
-fn bounds_updater(
-    window: Query<Entity, With<PrimaryWindow>>,
+pub fn bounds_updater(
+    window: Query<(Entity, &Window), With<PrimaryWindow>>,
     mut resize_event: MessageReader<WindowResized>,
-    mut rectangles_query: Query<&mut RectangleObject>,
+    mut rectangles_query: Query<(&mut RectangleObject, &mut Transform)>,
+    mut rng: ResMut<PseudoRng>,
+    mut prev_window_height: Local<f32>,
 ) {
-    let Ok(window_id) = window.single() else {
+    let Ok((window_id, window)) = window.single() else {
+        return;
+    };
+    if *prev_window_height == 0. {
+        *prev_window_height = window.height();
+    }
+    let Some(e) = resize_event.read().filter(|e| e.window == window_id).last() else {
         return;
     };
 
-    if let Some(e) = resize_event.read().filter(|e| e.window == window_id).last() {
-        let teleport_target = -(e.width / 2.);
-        rectangles_query.par_iter_mut().for_each(|mut r| {
-            r.teleport_target = teleport_target - r.width;
-        });
+    let teleport_target = -(e.width / 2.);
+    let rng = &mut rng.0;
+    let height_bound = e.height / 2.;
+    let respawn_probability = 1. - (*prev_window_height / e.height);
+    let target = if respawn_probability > 0. {
+        let prev_height_bound = *prev_window_height / 2.;
+        Some(Uniform::new(prev_height_bound, height_bound).unwrap())
+    } else {
+        None
+    };
+    for (mut r, mut t) in &mut rectangles_query {
+        r.teleport_target = teleport_target - r.width;
+        if let Some(target) = target {
+            if rng.random::<f32>() < respawn_probability {
+                t.translation.y = target.sample(rng) * if rng.random_bool(0.5) { 1. } else { -1. };
+            }
+        } else if t.translation.y <= -height_bound || height_bound <= t.translation.y {
+            t.translation.y = (rng.random::<f32>() - 0.5) * e.height;
+        }
     }
+    *prev_window_height = e.height;
 }
 
 fn movement(time: Res<Time>, mut rectangles_query: Query<(&RectangleObject, &mut Transform)>) {
@@ -167,7 +193,7 @@ fn collision_detection(mut rectangles_query: Query<(&RectangleObject, &mut Trans
         .par_iter_mut()
         .for_each(|(r, mut transform)| {
             if transform.translation.x < r.teleport_target {
-                transform.translation.x = -transform.translation.x;
+                transform.translation.x *= -1.;
             }
         });
 }

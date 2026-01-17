@@ -33,13 +33,14 @@ fn main() {
         Update,
         full_screen_toggle
             .run_if(pressed_f)
-            .ambiguous_with(rectangles::mouse_handler),
+            .before(rectangles::mouse_handler)
+            .before(rectangles::bounds_updater),
     );
     app.add_systems(
         Update,
         update_stats
             .run_if(resource_changed::<Stats>)
-            .ambiguous_with(rectangles::mouse_handler),
+            .after(rectangles::mouse_handler),
     );
     app.add_systems(
         Update,

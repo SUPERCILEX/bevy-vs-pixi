@@ -24,6 +24,11 @@ features = [
 
 [dev-dependencies]
 supercilex-tests = { version = "0.4.21", default-features = false }
+criterion = "0.8"
+
+[[bench]]
+name = "rng_comparison"
+harness = false
 
 [profile.release]
 lto = true
