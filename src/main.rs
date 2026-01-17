@@ -20,7 +20,7 @@ fn main() {
     app.add_plugins(DefaultPlugins.set(WindowPlugin {
         primary_window: Some(Window {
             title: "Rectangle canvas benchmark".to_string(),
-            resolution: WindowResolution::new(1000., 765.25),
+            resolution: WindowResolution::new(1000, 765),
             ..default()
         }),
         ..default()
@@ -48,7 +48,7 @@ fn main() {
             .ambiguous_with(update_stats),
     );
 
-    app.add_plugins(FrameTimeDiagnosticsPlugin);
+    app.add_plugins(FrameTimeDiagnosticsPlugin::default());
 
     if cfg!(debug_assertions) {
         for schedule in MainScheduleOrder::default().labels {
@@ -106,7 +106,7 @@ fn pressed_f(keyboard_input: Res<ButtonInput<KeyCode>>) -> bool {
 }
 
 fn full_screen_toggle(mut window: Query<&mut Window, With<PrimaryWindow>>) {
-    let Ok(mut window) = window.get_single_mut() else {
+    let Ok(mut window) = window.single_mut() else {
         return;
     };
 
@@ -122,7 +122,7 @@ fn update_stats(
     query: Query<Entity, With<StatsText>>,
     mut writer: TextUiWriter,
 ) {
-    let mut text = writer.text(query.single(), 2);
+    let mut text = writer.text(query.single().unwrap(), 2);
     text.clear();
     write!(text, "{}", stats.count).unwrap();
 }
@@ -136,7 +136,7 @@ fn update_fps(
         .get(&FrameTimeDiagnosticsPlugin::FPS)
         .and_then(Diagnostic::smoothed)
     {
-        let mut text = writer.text(query.single(), 4);
+        let mut text = writer.text(query.single().unwrap(), 4);
         text.clear();
         write!(text, "{fps:.2}").unwrap();
     }

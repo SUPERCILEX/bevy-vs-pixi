@@ -55,7 +55,7 @@ fn setup(
     stats: Res<Stats>,
     mut rng: ResMut<PseudoRng>,
 ) {
-    let Ok(window) = window.get_single() else {
+    let Ok(window) = window.single() else {
         return;
     };
 
@@ -70,7 +70,7 @@ pub fn mouse_handler(
     rectangles: Query<Entity, With<RectangleObject>>,
     mut rng: ResMut<PseudoRng>,
 ) {
-    let Ok(window) = window.get_single() else {
+    let Ok(window) = window.single() else {
         return;
     };
 
@@ -95,11 +95,11 @@ fn spawn_rectangles(
     let teleport_target = -(width / 2.);
 
     for _ in 0..num {
-        let dimensions = Vec2::splat(rng.r#gen::<f32>().mul_add(40., 10.));
+        let dimensions = Vec2::splat(rng.random::<f32>().mul_add(40., 10.));
         commands
             .spawn((
                 RectangleObject {
-                    velocity: rng.gen_range(60.0..120.0),
+                    velocity: rng.random_range(60.0..120.0),
                     width: dimensions.x,
                     teleport_target: teleport_target - dimensions.x,
                 },
@@ -109,9 +109,9 @@ fn spawn_rectangles(
                     ..default()
                 },
                 Transform::from_xyz(
-                    (rng.r#gen::<f32>() - 0.5) * width,
-                    (rng.r#gen::<f32>() - 0.5) * height,
-                    rng.r#gen::<f32>(),
+                    (rng.random::<f32>() - 0.5) * width,
+                    (rng.random::<f32>() - 0.5) * height,
+                    rng.random::<f32>(),
                 ),
             ))
             .with_children(|children| {
@@ -133,25 +133,20 @@ fn despawn_rectangles(
     num: u32,
 ) {
     for r in rectangles.iter().take(num as usize) {
-        commands.entity(r).despawn_recursive();
+        commands.entity(r).despawn();
     }
 }
 
 fn bounds_updater(
     window: Query<Entity, With<PrimaryWindow>>,
-    resize_event: Res<Events<WindowResized>>,
+    mut resize_event: MessageReader<WindowResized>,
     mut rectangles_query: Query<&mut RectangleObject>,
 ) {
-    let Ok(window_id) = window.get_single() else {
+    let Ok(window_id) = window.single() else {
         return;
     };
 
-    let mut reader = resize_event.get_cursor();
-    if let Some(e) = reader
-        .read(&resize_event)
-        .filter(|e| e.window == window_id)
-        .last()
-    {
+    if let Some(e) = resize_event.read().filter(|e| e.window == window_id).last() {
         let teleport_target = -(e.width / 2.);
         rectangles_query.par_iter_mut().for_each(|mut r| {
             r.teleport_target = teleport_target - r.width;
