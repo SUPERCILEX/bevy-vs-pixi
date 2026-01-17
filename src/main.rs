@@ -1,18 +1,21 @@
 #![allow(clippy::needless_pass_by_value)]
 
-use std::{fmt::Write, time::Duration};
+use std::fmt::Write;
 
 use bevy::{
     app::MainScheduleOrder,
-    diagnostic::{Diagnostic, DiagnosticsStore, FrameTimeDiagnosticsPlugin},
+    dev_tools::fps_overlay::{FpsOverlayConfig, FpsOverlayPlugin},
     ecs::schedule::{LogLevel, ScheduleBuildSettings},
     prelude::*,
-    time::common_conditions::on_timer,
     window::{PrimaryWindow, WindowMode, WindowResolution},
 };
 use rectangles::Stats;
 
 mod rectangles;
+
+fn text_color() -> Color {
+    Srgba::hex("a96cff").unwrap().into()
+}
 
 fn main() {
     let mut app = App::new();
@@ -42,14 +45,13 @@ fn main() {
             .run_if(resource_changed::<Stats>)
             .after(rectangles::mouse_handler),
     );
-    app.add_systems(
-        Update,
-        update_fps
-            .run_if(on_timer(Duration::from_secs(1)))
-            .ambiguous_with(update_stats),
-    );
 
-    app.add_plugins(FrameTimeDiagnosticsPlugin::default());
+    app.add_plugins(FpsOverlayPlugin {
+        config: FpsOverlayConfig {
+            text_color: text_color(),
+            ..default()
+        },
+    });
 
     if cfg!(debug_assertions) {
         for schedule in MainScheduleOrder::default().labels {
@@ -78,15 +80,14 @@ fn setup_ui(mut commands: Commands) {
             font_size: 30.0,
             ..default()
         },
-        TextColor(Srgba::hex("a96cff").unwrap().into()),
+        TextColor(text_color()),
     );
 
     commands
         .spawn((
             Node {
                 position_type: PositionType::Absolute,
-                top: Val::Px(0.),
-                left: Val::Px(0.),
+                bottom: Val::Px(0.),
                 padding: UiRect::all(Val::Px(5.)),
                 ..default()
             },
@@ -96,9 +97,7 @@ fn setup_ui(mut commands: Commands) {
             parent
                 .spawn((Text::default(), StatsText))
                 .with_child((TextSpan::new("Count: "), text_style.clone()))
-                .with_child((TextSpan::new(""), text_style.clone()))
-                .with_child((TextSpan::new("\nFPS: "), text_style.clone()))
-                .with_child((TextSpan::new("0.00"), text_style));
+                .with_child((TextSpan::new(""), text_style.clone()));
         });
 }
 
@@ -126,19 +125,4 @@ fn update_stats(
     let mut text = writer.text(query.single().unwrap(), 2);
     text.clear();
     write!(text, "{}", stats.count).unwrap();
-}
-
-fn update_fps(
-    diagnostics: Res<DiagnosticsStore>,
-    query: Query<Entity, With<StatsText>>,
-    mut writer: TextUiWriter,
-) {
-    if let Some(fps) = diagnostics
-        .get(&FrameTimeDiagnosticsPlugin::FPS)
-        .and_then(Diagnostic::smoothed)
-    {
-        let mut text = writer.text(query.single().unwrap(), 4);
-        text.clear();
-        write!(text, "{fps:.2}").unwrap();
-    }
 }

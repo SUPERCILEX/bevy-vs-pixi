@@ -30,6 +30,8 @@ features = [
     "2d_bevy_render",
     "ui_api",
     "ui_bevy_render",
+    "bevy_dev_tools",
+    "debug",
 ]
 
 [dev-dependencies]
