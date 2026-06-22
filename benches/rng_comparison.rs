@@ -2,7 +2,7 @@ use std::hint::black_box;
 
 use criterion::{Criterion, criterion_group, criterion_main};
 use rand::{
-    Rng, SeedableRng,
+    RngExt, SeedableRng,
     distr::{Distribution, Uniform},
 };
 use rand_xoshiro::Xoshiro256PlusPlus;

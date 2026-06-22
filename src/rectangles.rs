@@ -5,7 +5,7 @@ use bevy::{
     window::{PrimaryWindow, WindowResized},
 };
 use rand::{
-    Rng, SeedableRng,
+    RngExt, SeedableRng,
     distr::{Distribution, Uniform},
 };
 use rand_xoshiro::Xoshiro256PlusPlus;
@@ -184,7 +184,9 @@ fn movement(time: Res<Time>, mut rectangles_query: Query<(&RectangleObject, &mut
     rectangles_query
         .par_iter_mut()
         .for_each(|(r, mut transform)| {
-            transform.translation.x -= r.velocity * time.delta_secs();
+            transform.translation.x = r
+                .velocity
+                .mul_add(-time.delta_secs(), transform.translation.x);
         });
 }
 

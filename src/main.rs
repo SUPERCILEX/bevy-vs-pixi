@@ -77,7 +77,7 @@ fn setup_cameras(mut commands: Commands) {
 fn setup_ui(mut commands: Commands) {
     let text_style = (
         TextFont {
-            font_size: 30.0,
+            font_size: 30.0.into(),
             ..default()
         },
         TextColor(text_color()),
@@ -105,11 +105,7 @@ fn pressed_f(keyboard_input: Res<ButtonInput<KeyCode>>) -> bool {
     keyboard_input.just_released(KeyCode::KeyF)
 }
 
-fn full_screen_toggle(mut window: Query<&mut Window, With<PrimaryWindow>>) {
-    let Ok(mut window) = window.single_mut() else {
-        return;
-    };
-
+fn full_screen_toggle(mut window: Single<&mut Window, With<PrimaryWindow>>) {
     window.mode = if window.mode == WindowMode::Windowed {
         WindowMode::BorderlessFullscreen(MonitorSelection::Current)
     } else {
@@ -119,10 +115,10 @@ fn full_screen_toggle(mut window: Query<&mut Window, With<PrimaryWindow>>) {
 
 fn update_stats(
     stats: Res<Stats>,
-    query: Query<Entity, With<StatsText>>,
+    query: Single<Entity, With<StatsText>>,
     mut writer: TextUiWriter,
 ) {
-    let mut text = writer.text(query.single().unwrap(), 2);
+    let mut text = writer.text(*query, 2);
     text.clear();
     write!(text, "{}", stats.count).unwrap();
 }

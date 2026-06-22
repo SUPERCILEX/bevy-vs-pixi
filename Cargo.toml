@@ -10,32 +10,14 @@ categories = ["games"]
 license = "Apache-2.0"
 
 [dependencies]
-log = { version = "0.4.29", features = ["release_max_level_off"] }
-rand = { version = "0.9.2", default-features = false }
-rand_xoshiro = "0.7.0"
+log = { version = "0.4.33", features = ["release_max_level_off"] }
+rand = { version = "0.10.1", default-features = false }
+rand_xoshiro = "0.8.1"
 tracing = { version = "0.1.44", features = ["release_max_level_off"] }
-
-[dependencies.bevy]
-version = "0.18"
-default-features = false
-features = [
-    "std",
-    "bevy_winit",
-    "default_font",
-    "multi_threaded",
-    "webgl2",
-    "x11",
-    "wayland",
-    "default_app",
-    "2d_bevy_render",
-    "ui_api",
-    "ui_bevy_render",
-    "bevy_dev_tools",
-    "debug",
-]
+bevy = { version = "0.19", default-features = false, features = ["2d", "ui", "bevy_dev_tools"] }
 
 [dev-dependencies]
-supercilex-tests = { version = "0.4.21", default-features = false }
+supercilex-tests = { version = "0.4.22", default-features = false }
 criterion = "0.8"
 
 [[bench]]
